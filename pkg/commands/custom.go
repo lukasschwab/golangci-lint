@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
 	"github.com/golangci/golangci-lint/pkg/commands/internal"
@@ -12,6 +14,10 @@ import (
 )
 
 const envKeepTempFiles = "CUSTOM_GCL_KEEP_TEMP_FILES"
+
+var (
+	outputArgument = ""
+)
 
 type customCommand struct {
 	cmd *cobra.Command
@@ -33,6 +39,8 @@ func newCustomCommand(logger logutils.Log) *customCommand {
 		SilenceUsage: true,
 	}
 
+	customCmd.Flags().StringVarP(&outputArgument, "output", "o", "", color.GreenString("Path to output file"))
+
 	c.cmd = customCmd
 
 	return c
@@ -42,6 +50,12 @@ func (c *customCommand) preRunE(_ *cobra.Command, _ []string) error {
 	cfg, err := internal.LoadConfiguration()
 	if err != nil {
 		return err
+	}
+
+	if outputArgument != "" {
+		directory, name := path.Split(outputArgument)
+		cfg.Destination = directory
+		cfg.Name = name
 	}
 
 	err = cfg.Validate()
